@@ -1,0 +1,20 @@
+Options -Indexes
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Hide PHP errors from output
+php_flag  display_errors  Off
+php_flag  display_startup_errors  Off
+php_value error_reporting  E_ALL
+
+# Block direct access to internal directories
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteRule ^(config|dao|model|controller|view|tests|vendor)/.*$ - [F,L]
+</IfModule>

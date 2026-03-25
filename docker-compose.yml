@@ -1,0 +1,44 @@
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: pdv_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-pdv}
+      MYSQL_USER: ${DB_USER:-pdv_user}
+      MYSQL_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./banco.sql:/docker-entrypoint-initdb.d/banco.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER:-pdv_user}", "-p${DB_PASS}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdv_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-pdv}
+      DB_USER: ${DB_USER:-pdv_user}
+      DB_PASS: ${DB_PASS}
+      DB_CHARSET: utf8mb4
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
